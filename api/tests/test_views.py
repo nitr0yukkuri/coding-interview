@@ -36,12 +36,13 @@ class CategoryViewTests(APITestCase):
         response = self.client.get(detail_url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["id"], str(self.category.id))
-        self.assertEqual(response.data["company"], str(self.company.id))
-        self.assertEqual(response.data["name"], self.category.name)
-        self.assertEqual(response.data["parent_category"], str(self.parent_category.id))
-        self.assertIn("created_at", response.data)
-        self.assertIn("updated_at", response.data)
+        response_data = response.json()
+        self.assertEqual(response_data["id"], str(self.category.id))
+        self.assertEqual(response_data["company"], str(self.company.id))
+        self.assertEqual(response_data["name"], self.category.name)
+        self.assertEqual(response_data["parent_category"], str(self.parent_category.id))
+        self.assertIn("created_at", response_data)
+        self.assertIn("updated_at", response_data)
 
         missing_url = reverse("category-detail", args=[uuid4()])
         self.assertEqual(self.client.get(missing_url).status_code, status.HTTP_404_NOT_FOUND)
@@ -56,9 +57,10 @@ class CategoryViewTests(APITestCase):
         response = self.client.post(self.list_url, payload, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data["company"], str(self.company.id))
-        self.assertEqual(response.data["name"], payload["name"])
-        self.assertEqual(response.data["parent_category"], str(self.parent_category.id))
+        response_data = response.json()
+        self.assertEqual(response_data["company"], str(self.company.id))
+        self.assertEqual(response_data["name"], payload["name"])
+        self.assertEqual(response_data["parent_category"], str(self.parent_category.id))
         self.assertTrue(Category.objects.filter(id=response.data["id"], **payload).exists())
 
     def test_create_rejects_invalid_fields(self):
@@ -154,3 +156,4 @@ class CategoryViewTests(APITestCase):
         child.refresh_from_db()
         self.assertIsNone(child.parent_category)
         self.assertEqual(self.client.get(detail_url).status_code, status.HTTP_404_NOT_FOUND)
+
